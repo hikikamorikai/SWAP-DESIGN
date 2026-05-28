@@ -4,7 +4,6 @@ import { ProductDetail } from "./components/ProductDetail";
 import { CategoryFilter } from "./components/CategoryFilter";
 import { supabase } from "./supabaseClient";
 
-// Структура, которая приходит напрямую из Supabase от бэкендера
 interface SupabaseProduct {
   id: number;
   description: string;
@@ -24,64 +23,103 @@ const formatPrice = (price: number) => {
 
 export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("Все");
-  // Используем type 'any', чтобы всплывающее окно ProductDetail тоже не выдавало ошибок типов
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Состояние для кастомного всплывающего текста
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchProducts = async (showGlobalLoading = true) => {
+    try {
+      if (showGlobalLoading) setLoading(true);
+      
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("id", { ascending: false });
+
+      if (error) {
+        console.error("Ошибка Supabase:", error.message);
+        return;
+      }
+
+      if (data) {
+        const adaptedProducts = data.map((item: SupabaseProduct) => ({
+          id: item.id,
+          title: item.description,
+          price: `${formatPrice(item.price_uzs)} UZS`,
+          image: item.photo_url,
+          seller: item.seller_district,
+          channel: `@tg_channel`,
+          category: item.category || "Одежда",
+          description: item.description,
+          size: item.size
+        }));
+        
+        setProducts(adaptedProducts);
+      }
+    } catch (err) {
+      console.error("Не удалось загрузить товары:", err);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false); // Выключаем всплывающий текст
+    }
+  };
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .eq("is_active", true)
-          .order("id", { ascending: false });
-
-        if (error) {
-          console.error("Ошибка Supabase:", error.message);
-          return;
-        }
-
-        if (data) {
-          // Превращаем данные бэкенда в объект, который на 100% удовлетворяет интерфейсу Figma-карточки
-          const adaptedProducts = data.map((item: SupabaseProduct) => ({
-            id: item.id,
-            title: item.description, // Описание идет в заголовок карточки
-            price: `${formatPrice(item.price_uzs)} UZS`,
-            image: item.photo_url,
-            seller: item.seller_district, // Район Ташкента
-            channel: `@tg_channel`, // Временная заглушка для канала
-            category: item.category || "Одежда", // Категория для фильтра
-            description: item.description, // Передаем и полное описание для экрана деталей
-            size: item.size
-          }));
-          
-          setProducts(adaptedProducts);
-        }
-      } catch (err) {
-        console.error("Не удалось загрузить товары:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProducts();
+    fetchProducts(true);
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true); // Включаем всплывающий текст
+    await fetchProducts(false); // Обновляем в фоне
+  };
 
   const filteredProducts = products.filter((product) => {
     return selectedCategory === "Все" || product.category === selectedCategory;
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      
+      {/* ВСЕГДА ВСПЛЫВАЮЩИЙ ТЕКСТ (Появляется по центру экрана поверх всего при обновлении) */}
+      {isRefreshing && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="bg-gray-900/80 text-white text-xs font-light tracking-wide px-4 py-2 rounded-full backdrop-blur-sm animate-pulse shadow-md">
+            Обновление списка...
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="text-center mb-8 pt-2">
-          <h1 className="text-3xl font-light tracking-tight text-gray-900">
+        
+        {/* Шапка приложения */}
+        <div className="flex items-center justify-between mb-8 pt-2 relative">
+          <div className="w-6"></div> {/* Заглушка для баланса */}
+          
+          <h1 className="text-3xl font-light tracking-tight text-gray-900 text-center">
             Nearby
           </h1>
+          
+          {/* Маленькая, блёклая кнопочка, которая не бросается в глаза */}
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing || loading}
+            className={`p-1.5 text-gray-300 hover:text-gray-500 transition-colors rounded-md ${isRefreshing ? 'opacity-40' : ''}`}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              strokeWidth={2} 
+              stroke="currentColor" 
+              className="w-4 h-4" // Крошечный размер иконки
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+          </button>
         </div>
 
         <div className="mb-8">
