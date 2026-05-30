@@ -19,44 +19,44 @@ interface ProductDetailProps {
   onClose: () => void;
 }
 
-export function ProductDetail({ product, onClose }: ProductDetailProps) {
-  // Стейт, который меняет текст кнопки после отправки
-  const [isSent, setIsSent] = useState(false);
+  export function ProductDetail({ product, onClose }: ProductDetailProps) {
+    // Стейт, который меняет текст кнопки после отправки
+    const [isSent, setIsSent] = useState(false);
 
-  if (!product) return null;
+    if (!product) return null;
 
-  const handleCalculateTaxi = () => {
-    // Если уже отправили, повторно ничего не делаем
-    if (isSent) return;
+    const handleCalculateTaxi = () => {
+      // Если уже отправили, повторно ничего не делаем
+      if (isSent) return;
 
-    const tg = (window as any).Telegram?.WebApp;
-    const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
-    
-    if (tg) {
-      if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('medium');
-      }
+      const tg = (window as any).Telegram?.WebApp;
+      const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
       
-      if (tg.showPopup) {
-        tg.showPopup({
-          title: '🚕 Расчет отправлен!',
-          message: 'Сравнение цен на доставку по Ташкенту уже ждет тебя в чате с ботом. Проверь переписку!',
-          buttons: [{ type: 'close', text: 'Понятно' }]
-        });
-      }
-      
-      if (tg.openTelegramLink) {
-        tg.openTelegramLink(botUrl);
-      }
+      if (tg) {
+        if (tg.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred('medium');
+        }
+        
+        if (tg.showPopup) {
+          tg.showPopup({
+            title: '🚕 Расчет отправлен!',
+            message: 'Сравнение цен на доставку по Ташкенту уже ждет тебя в чате с ботом. Проверь переписку!',
+            buttons: [{ type: 'close', text: 'Понятно' }]
+          });
+        }
+          
+        if (tg.openTelegramLink) {
+          tg.openTelegramLink(botUrl);
+        }
 
-      // Меняем статус кнопки на "Отправлено"
-      setIsSent(true);
+        // Меняем статус кнопки на "Отправлено"
+        setIsSent(true);
 
-    } else {
-      window.open(botUrl, '_blank');
-      setIsSent(true);
-    }
-  };
+      } else {
+        window.open(botUrl, '_blank');
+        setIsSent(true);
+      }
+    };
 
   return (
     <motion.div
