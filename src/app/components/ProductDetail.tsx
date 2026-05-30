@@ -27,15 +27,27 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg && tg.openTelegramLink) {
-      // Нативная логика для Telegram (сработает на смартфонах и в нормальном клиенте)
+      // 1. Нативный тактильный отклик (вибрация)
       tg.HapticFeedback.impactOccurred('medium');
+      
+      // 2. Открываем диплинк для бэкенда
       tg.openTelegramLink(botUrl);
       
+      // 3. Показываем красивое нативное окно уведомления поверх Mini App
+      if (tg.showPopup) {
+        tg.showPopup({
+          title: "🚕 Расчет отправлен!",
+          message: "Сравнение цен на доставку по Ташкенту уже ждет тебя в чате с ботом.",
+          buttons: [{ type: "ok", text: "Отлично" }]
+        });
+      }
+      
+      // 4. Мягкая попытка закрыть приложение (сработает там, где клиент это позволяет)
       setTimeout(() => { 
         tg.close(); 
       }, 100);
     } else {
-      // Железный фолбек для ПК и браузеров: вместо алерта просто открываем ссылку напрямую
+      // Железный фолбек для обычных браузеров на ПК
       window.open(botUrl, '_blank');
     }
   };
