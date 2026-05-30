@@ -12,6 +12,7 @@ interface SupabaseProduct {
   photo_url: string[];
   size: string;
   seller_district: string;
+  seller: string;
   is_active: boolean;
   category?: string;
 }
@@ -52,7 +53,8 @@ export default function App() {
           title: item.description,
           price: `${formatPrice(item.price_uzs)} UZS`,
           image: item.photo_url,
-          seller: item.seller_district,
+          seller: item.seller,
+          seller_district: item.seller_district,
           channel: `@tg_channel`,
           category: item.category || "Одежда",
           description: item.description,
