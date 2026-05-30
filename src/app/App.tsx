@@ -116,7 +116,7 @@ export default function App() {
           {/* Название и подпись по центру */}
           <div className="flex flex-col items-center flex-1 text-center">
             <h1 className="text-[16px] font-bold text-gray-900 leading-tight">
-              Nearrby
+              iBuyNasvay
             </h1>
             <p className="text-[10px] text-gray-500 font-light mt-0.5">
               Вся ресейл одежда в одном месте
