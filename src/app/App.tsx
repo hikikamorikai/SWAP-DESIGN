@@ -20,7 +20,7 @@ interface SupabaseProduct {
   created_at: string;
 }
 
-const categories = ["Все", "Одежда", "Электроника", "Для дома", "Аксессуары"];
+const categories = ["Все", "Одежда", "Обувь", "Аксессуары"];
 
 const formatPrice = (price: number) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
