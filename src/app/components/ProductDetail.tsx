@@ -32,16 +32,17 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
   const handleCalculateTaxi = () => {
     if (isSent) return;
-
+  
     const tg = (window as any).Telegram?.WebApp;
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg) {
-      // Сочная двойная вибрация успеха в палец!
+      // 1. ЗАПУСКАЕМ ВИБРАЦИЮ (Сработает мгновенно при тапе)
       if (tg.HapticFeedback) {
         tg.HapticFeedback.notificationOccurred('success');
       }
       
+      // 2. Показываем поп-ап
       if (tg.showPopup) {
         tg.showPopup({
           title: '🚕 Расчет отправлен!',
@@ -53,7 +54,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
       if (tg.openTelegramLink) {
         tg.openTelegramLink(botUrl);
       }
-
+  
       setIsSent(true);
     } else {
       window.open(botUrl, '_blank');
