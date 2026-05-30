@@ -86,27 +86,30 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // 2. ИСПРАВЛЕННАЯ ФУНКЦИЯ СВЯЗИ (По промпту бэкендщика 🚀)
   const handleContactSeller = () => {
     const tg = (window as any).Telegram?.WebApp;
     
-    if (hasValidSeller && sellerUsername) {
-      const sellerUrl = `https://t.me/${sellerUsername}`;
-
+    // Достаем значение
+    const rawSeller = product.seller || "";
+    // Принудительно очищаем всё, что не является буквами/цифрами/подчеркиванием
+    const cleanUsername = rawSeller.replace(/[^a-zA-Z0-9_]/g, '');
+  
+    console.log("Очищенный юзернейм для ссылки:", cleanUsername);
+  
+    if (cleanUsername.length >= 5) {
+      const sellerUrl = `https://t.me/${cleanUsername}`;
+      
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(sellerUrl);
       } else {
         window.open(sellerUrl, '_blank');
       }
     } else {
-      if (tg && tg.showPopup) {
-        tg.showPopup({ 
-          title: 'Упс!',
-          message: 'К сожалению, у этого товара нет прямого контакта продавца.' 
-        });
-      } else {
-        alert('К сожалению, у этого товара нет прямого контакта продавца.');
-      }
+      // Если юзернейм слишком короткий или пустой
+      tg?.showPopup?.({ 
+        title: 'Упс!', 
+        message: 'Контакт продавца невалиден или не найден.' 
+      });
     }
   };
 
