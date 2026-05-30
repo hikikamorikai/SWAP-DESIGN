@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { X, MessageCircle, ExternalLink, User, MapPin } from "lucide-react"; // Добавил MapPin для района
+import { X, MessageCircle, ExternalLink, User, MapPin, Calendar } from "lucide-react";
 
 interface Product {
   id: number;
   title: string;
-  price_uzs: string;       // Обновили поле цены
+  price_uzs: string;
   image: string[];
-  seller: string;          // Наше динамическое поле продавца
-  seller_district: string; // Новое поле района из бэкенда
-  channel: string;
-  description: string;
+  seller: string;
+  seller_district: string;
   category: string;
-  date: string;
+  // Новые поля от бэкендщика для ссылки на канал и даты
+  channel_username: string;
+  telegram_post_id: string | number;
+  created_at: string; 
+  description: string;
 }
 
 interface ProductDetailProps {
@@ -23,30 +25,37 @@ interface ProductDetailProps {
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
   const [isSent, setIsSent] = useState(false);
 
-  // Сбрасываем статус кнопки в обычный режим, если юзер переключился на другой товар
+  // Сбрасываем статус кнопки такси при смене товара
   useEffect(() => {
     setIsSent(false);
   }, [product?.id]);
 
+  // ВАЖНО: Тот самый console.log, который попросил бэкендщик.
+  // Открой консоль в браузере или ТГ-десктопе, чтобы увидеть, что реально прилетает из базы!
+  useEffect(() => {
+    if (product) {
+      console.log("Данные текущего товара (product):", product);
+    }
+  }, [product]);
+
   if (!product) return null;
 
+  // 1. КНОПКА ТАКСИ (Уже рабочая)
   const handleCalculateTaxi = () => {
     if (isSent) return;
-  
+
     const tg = (window as any).Telegram?.WebApp;
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg) {
-      // 1. ЗАПУСКАЕМ ВИБРАЦИЮ (Сработает мгновенно при тапе)
       if (tg.HapticFeedback) {
         tg.HapticFeedback.notificationOccurred('success');
       }
       
-      // 2. Показываем поп-ап
       if (tg.showPopup) {
         tg.showPopup({
           title: '🚕 Расчет отправлен!',
-          message: 'Сравнение цен на доставку по Ташкенту уже ждет тебя в чате с ботом. Проверь переписку!',
+          message: 'Сравнение цен на доставку по Ташкенту уже ждет тебя в чате с ботом.',
           buttons: [{ type: 'close', text: 'Понятно' }]
         });
       }
@@ -54,11 +63,72 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
       if (tg.openTelegramLink) {
         tg.openTelegramLink(botUrl);
       }
-  
+
       setIsSent(true);
     } else {
       window.open(botUrl, '_blank');
       setIsSent(true);
+    }
+  };
+
+  // 2. НОВАЯ ФУНКЦИЯ: Связаться с продавцом
+  const handleContactSeller = () => {
+    const tg = (window as any).Telegram?.WebApp;
+    
+    if (product.seller && product.seller !== 'Админ канала' && product.seller !== 'Не указан') {
+      const cleanUsername = product.seller.replace('@', '').trim();
+      const sellerUrl = `https://t.me/${cleanUsername}`;
+      
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(sellerUrl);
+      } else {
+        window.open(sellerUrl, '_blank');
+      }
+    } else {
+      if (tg && tg.showPopup) {
+        tg.showPopup({ 
+          title: 'Упс!',
+          message: 'К сожалению, у этого товара нет прямого контакта продавца.' 
+        });
+      } else {
+        alert('К сожалению, у этого товара нет прямого контакта продавца.');
+      }
+    }
+  };
+
+  // 3. НОВАЯ ФУНКЦИЯ: Открыть в канале
+  const handleOpenInChannel = () => {
+    const tg = (window as any).Telegram?.WebApp;
+    
+    if (product.channel_username && product.telegram_post_id) {
+      const cleanChannel = product.channel_username.replace('@', '').trim();
+      const channelUrl = `https://t.me/${cleanChannel}/${product.telegram_post_id}`;
+      
+      if (tg && tg.openLink) {
+        tg.openLink(channelUrl); // Открывает ссылку прямо внутри интерфейса Telegram
+      } else {
+        window.open(channelUrl, '_blank');
+      }
+    } else {
+      if (tg && tg.showPopup) {
+        tg.showPopup({ message: 'Ссылка на оригинальный пост недоступна.' });
+      } else {
+        alert('Ссылка на оригинальный пост недоступна.');
+      }
+    }
+  };
+
+  // Форматирование даты
+  const formatPostDate = (dateString: string) => {
+    try {
+      if (!dateString) return "Не указана";
+      return new Date(dateString).toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return "Не указана";
     }
   };
 
@@ -124,7 +194,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 {product.title}
               </h1>
               <p className="text-3xl font-semibold text-gray-900">
-                {product.price_uzs} {/* Выводим новую цену price_uzs */}
+                {product.price_uzs}
               </p>
             </div>
 
@@ -143,27 +213,25 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 </span>
               </div>
 
-              {/* УМНАЯ АВТОМАТИЧЕСКАЯ СТРОКА С ПРОДАВЦОМ */}
+              {/* ДИНАМИЧЕСКИЙ ПРОДАВЕЦ */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Продавец</span>
                 <span className="text-sm font-medium text-gray-900">
                   {product.seller && product.seller.startsWith('@') ? (
-                    <a 
-                      href={`https://t.me/${product.seller.replace('@', '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-1 bg-blue-5 px-2.5 py-1 rounded-lg text-xs"
+                    <button 
+                      onClick={handleContactSeller}
+                      className="text-blue-600 hover:underline flex items-center gap-1 bg-blue-5 px-2.5 py-1 rounded-lg text-xs font-medium"
                     >
                       <User className="w-3.5 h-3.5" />
                       {product.seller}
-                    </a>
+                    </button>
                   ) : (
                     product.seller || "Не указан"
                   )}
                 </span>
               </div>
 
-              {/* НОВАЯ СТРОКА: РАЙОН ПРОДАВЦА */}
+              {/* РАЙОН */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Район</span>
                 <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
@@ -178,22 +246,19 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Канал</span>
-                <span className="text-sm font-medium text-blue-600">
-                  {product.channel}
-                </span>
-              </div>
-              <div className="flex justify-between">
+              {/* ДИНАМИЧЕСКАЯ ДАТА ПОСТА */}
+              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Дата публикации</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {product.date}
+                <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  {formatPostDate(product.created_at)}
                 </span>
               </div>
             </div>
 
             {/* Кнопки действий */}
             <div className="pt-6 space-y-3">
+              {/* КНОПКА ТАКСИ */}
               <button 
                 onClick={handleCalculateTaxi}
                 disabled={isSent}
@@ -216,12 +281,20 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 )}
               </button>
 
-              <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
+              {/* КНОПКА СВЯЗАТЬСЯ С ПРОДАВЦОМ (ОЖИЛА 🚀) */}
+              <button 
+                onClick={handleContactSeller}
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
+              >
                 <MessageCircle className="w-5 h-5" />
                 Связаться с продавцом
               </button>
               
-              <button className="w-full bg-gray-100 text-gray-900 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
+              {/* КНОПКА ОТКРЫТЬ В КАНАЛЕ (ОЖИЛА 🚀) */}
+              <button 
+                onClick={handleOpenInChannel}
+                className="w-full bg-gray-100 text-gray-900 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+              >
                 <ExternalLink className="w-5 h-5" />
                 Открыть в канале
               </button>
