@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 // 1. ИМПОРТ: Добавляем импорт ProductCardSkeleton рядом с ProductCard
 import { ProductCard, ProductCardSkeleton } from "./components/ProductCard";
 import { ProductDetail } from "./components/ProductDetail";
-import { CategoryFilter } from "./components/CategoryFilter";
+import { FilterBar } from "./components/FilterBar";
 import { supabase } from "./supabaseClient";
 
 interface SupabaseProduct {
@@ -28,6 +28,9 @@ const formatPrice = (price: number) => {
 
 export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("Все");
+  const [activeFilters, setActiveFilters] = useState({ 
+    category: "Все", priceFrom: "", priceTo: "", size: "Все" 
+  });
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,8 +93,17 @@ export default function App() {
     await fetchProducts(false); // Обновляем в фоне
   };
 
-  const filteredProducts = products.filter((product) => {
-    return selectedCategory === "Все" || product.category === selectedCategory;
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory = activeFilters.category === "Все" || p.category === activeFilters.category;
+    const matchesSize = activeFilters.size === "Все" || p.size === activeFilters.size;
+    
+    // Преобразуем цену "10 000 UZS" в число 10000 для сравнения
+    const price = parseInt(p.price.replace(/\D/g, ""));
+    const matchesPrice = 
+      (!activeFilters.priceFrom || price >= parseInt(activeFilters.priceFrom)) &&
+      (!activeFilters.priceTo || price <= parseInt(activeFilters.priceTo));
+    
+    return matchesCategory && matchesSize && matchesPrice;
   });
 
   return (
@@ -116,7 +128,7 @@ export default function App() {
           {/* Название и подпись по центру */}
           <div className="flex flex-col items-center flex-1 text-center">
             <h1 className="text-[16px] font-bold text-gray-900 leading-tight">
-              iBuyNasvay
+              ChuchVARRA
             </h1>
             <p className="text-[10px] text-gray-500 font-light mt-0.5">
               Вся ресейл одежда в одном месте
@@ -143,13 +155,9 @@ export default function App() {
         </header>
         {/* --- КОНЕЦ ШАПКИ --- */}
 
-        <div className="mb-8">
-          <CategoryFilter
-            categories={categories}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
-        </div>
+        <div className="mb-6">
+  <FilterBar onApply={(filters) => setActiveFilters(filters)} />
+</div>
 
         {/* 2. ЗАМЕНА ЛОГИКИ ЗАГРУЗКИ: рендерим красивую сетку из 6 скелетонов */}
         {loading ? (
