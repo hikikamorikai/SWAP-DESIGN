@@ -27,13 +27,10 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg && tg.openTelegramLink) {
-      // 1. Нативный тактильный отклик (вибрация)
+      // 1. Сразу даем вибро-отклик в палец
       tg.HapticFeedback.impactOccurred('medium');
       
-      // 2. Открываем диплинк для бэкенда
-      tg.openTelegramLink(botUrl);
-      
-      // 3. Показываем красивое нативное окно уведомления поверх Mini App
+      // 2. СНАЧАЛА вызываем нативное окно (до перехода и закрытия)
       if (tg.showPopup) {
         tg.showPopup({
           title: "🚕 Расчет отправлен!",
@@ -42,10 +39,13 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
         });
       }
       
-      // 4. Мягкая попытка закрыть приложение (сработает там, где клиент это позволяет)
+      // 3. ТЕПЕРЬ открываем диплинк для бэкенда
+      tg.openTelegramLink(botUrl);
+      
+      // 4. Мягко пытаемся закрыть Mini App через 500мс (даем время окну отрисоваться)
       setTimeout(() => { 
         tg.close(); 
-      }, 100);
+      }, 500);
     } else {
       // Железный фолбек для обычных браузеров на ПК
       window.open(botUrl, '_blank');
