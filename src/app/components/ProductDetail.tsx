@@ -19,16 +19,21 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
-  const handleCalculateTaxi = () => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg) {
-      // Новая логика бэкендщика через диплинк бота
-      tg.openTelegramLink(`https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`);
-    } else {
-      // Оставляем для тестов в браузере на компьютере
-      alert("Локальный тест: переход по ссылке к боту с id " + product.id);
-    }
-  };
+  // Заменяем функцию в файле ProductDetail.tsx
+const handleCalculateTaxi = () => {
+  const tg = (window as any).Telegram?.WebApp;
+  
+  if (tg) {
+    // 1. Сначала жестко закрываем Mini App, чтобы десктоп-версия не тупила
+    tg.close();
+    
+    // 2. И сразу перенаправляем в чат к боту с нужной командой
+    tg.openTelegramLink("https://t.me/nearbytashkent_bot?start=calc_taxi_" + product.id);
+  } else {
+    // Для тестов на компьютере вне Телеграма
+    alert("Локальный тест: закрытие и переход к боту с id " + product.id);
+  }
+};
   if (!product) return null;
 
   return (
