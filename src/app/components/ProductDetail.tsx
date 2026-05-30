@@ -116,6 +116,13 @@
     // 3. ОТКРЫТЬ В КАНАЛЕ
     const handleOpenInChannel = () => {
       const tg = (window as any).Telegram?.WebApp;
+
+      // ДОБАВЛЯЕМ АЛЕРТ ДЛЯ ДИАГНОСТИКИ:
+  alert(`DEBUG:
+  Channel: ${product.channel_username}
+  PostID: ${product.telegram_post_id}
+  Type of PostID: ${typeof product.telegram_post_id}
+`);
       
       if (product.channel_username && product.telegram_post_id) {
         const cleanChannel = product.channel_username.replace('@', '').trim();
