@@ -56,7 +56,7 @@ export default function App() {
           image: item.photo_url,
           seller: item.seller || "",
           seller_district: item.seller_district,
-          channel: item.channel_username || "@default_channel",
+          channel: item.channel_username || "",
           category: item.category || "Одежда",
           description: item.description,
           size: item.size
