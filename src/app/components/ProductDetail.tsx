@@ -10,11 +10,10 @@ interface Product {
   seller: string;
   seller_district: string;
   category: string;
-  // Новые поля от бэкендщика для ссылки на канал и даты
   channel_username: string;
   telegram_post_id: string | number;
   created_at: string; 
-  description: string;
+  description: string; // Исправили ошибку: вернули поле описания в интерфейс
 }
 
 interface ProductDetailProps {
@@ -30,8 +29,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     setIsSent(false);
   }, [product?.id]);
 
-  // ВАЖНО: Тот самый console.log, который попросил бэкендщик.
-  // Открой консоль в браузере или ТГ-десктопе, чтобы увидеть, что реально прилетает из базы!
+  // Выводим данные в консоль (F12), чтобы проверить, что присылает бэкенд
   useEffect(() => {
     if (product) {
       console.log("Данные текущего товара (product):", product);
@@ -40,7 +38,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
   if (!product) return null;
 
-  // 1. КНОПКА ТАКСИ (Уже рабочая)
+  // 1. КНОПКА ТАКСИ
   const handleCalculateTaxi = () => {
     if (isSent) return;
 
@@ -71,7 +69,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // 2. НОВАЯ ФУНКЦИЯ: Связаться с продавцом
+  // 2. СВЯЗАТЬСЯ С ПРОДАВЦОМ (С динамической сборкой URL и очисткой)
   const handleContactSeller = () => {
     const tg = (window as any).Telegram?.WebApp;
     
@@ -96,7 +94,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // 3. НОВАЯ ФУНКЦИЯ: Открыть в канале
+  // 3. ОТКРЫТЬ В КАНАЛЕ (Динамическая склейка ссылки на пост)
   const handleOpenInChannel = () => {
     const tg = (window as any).Telegram?.WebApp;
     
@@ -105,7 +103,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
       const channelUrl = `https://t.me/${cleanChannel}/${product.telegram_post_id}`;
       
       if (tg && tg.openLink) {
-        tg.openLink(channelUrl); // Открывает ссылку прямо внутри интерфейса Telegram
+        tg.openLink(channelUrl); 
       } else {
         window.open(channelUrl, '_blank');
       }
@@ -118,7 +116,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // Форматирование даты
+  // Красивое форматирование даты
   const formatPostDate = (dateString: string) => {
     try {
       if (!dateString) return "Не указана";
@@ -131,6 +129,12 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
       return "Не указана";
     }
   };
+
+  // Проверка: есть ли у нас живой продавец
+  const hasValidSeller = product.seller && 
+                             product.seller !== 'Админ канала' && 
+                             product.seller !== 'Не указан' && 
+                             product.seller.trim() !== '';
 
   return (
     <motion.div
@@ -217,16 +221,16 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Продавец</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {product.seller && product.seller.startsWith('@') ? (
+                  {hasValidSeller ? (
                     <button 
                       onClick={handleContactSeller}
                       className="text-blue-600 hover:underline flex items-center gap-1 bg-blue-5 px-2.5 py-1 rounded-lg text-xs font-medium"
                     >
                       <User className="w-3.5 h-3.5" />
-                      {product.seller}
+                      {product.seller.startsWith('@') ? product.seller : `@${product.seller}`}
                     </button>
                   ) : (
-                    product.seller || "Не указан"
+                    "Не указан"
                   )}
                 </span>
               </div>
@@ -246,7 +250,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 </span>
               </div>
 
-              {/* ДИНАМИЧЕСКАЯ ДАТА ПОСТА */}
+              {/* ДАТА ПУБЛИКАЦИИ */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Дата публикации</span>
                 <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
@@ -281,21 +285,31 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 )}
               </button>
 
-              {/* КНОПКА СВЯЗАТЬСЯ С ПРОДАВЦОМ (ОЖИЛА 🚀) */}
-              <button 
-                onClick={handleContactSeller}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Связаться с продавцом
-              </button>
+              {/* УМНАЯ КНОПКА СВЯЗИ */}
+              {hasValidSeller ? (
+                <button 
+                  onClick={handleContactSeller}
+                  className="w-full bg-blue-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Связаться с продавцом
+                </button>
+              ) : (
+                <button 
+                  disabled
+                  className="w-full bg-gray-100 text-gray-400 py-4 rounded-xl font-medium flex items-center justify-center gap-2 cursor-not-allowed border border-gray-200/50"
+                >
+                  <MessageCircle className="w-5 h-5 text-gray-300" />
+                  Контакты не указаны в посте
+                </button>
+              )}
               
-              {/* КНОПКА ОТКРЫТЬ В КАНАЛЕ (ОЖИЛА 🚀) */}
+              {/* КНОПКА ОТКРЫТЬ В КАНАЛЕ */}
               <button 
                 onClick={handleOpenInChannel}
-                className="w-full bg-gray-100 text-gray-900 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+                className="w-full bg-gray-50 text-gray-700 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
               >
-                <ExternalLink className="w-5 h-5" />
+                <ExternalLink className="w-5 h-5 text-gray-500" />
                 Открыть в канале
               </button>
             </div>
