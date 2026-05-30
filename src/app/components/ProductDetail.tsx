@@ -21,25 +21,22 @@ interface ProductDetailProps {
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
   if (!product) return null;
-  // Заменяем функцию в файле ProductDetail.tsx
+
   const handleCalculateTaxi = () => {
     const tg = (window as any).Telegram?.WebApp;
+    const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
-    if (tg) {
-      // 1. Сразу даем вибро-отклик в палец
+    if (tg && tg.openTelegramLink) {
+      // Нативная логика для Telegram (сработает на смартфонах и в нормальном клиенте)
       tg.HapticFeedback.impactOccurred('medium');
+      tg.openTelegramLink(botUrl);
       
-      // 2. Сначала открываем ссылку к боту (теперь Телеграм её точно подхватит)
-      tg.openTelegramLink("https://t.me/nearbytashkent_bot?start=calc_taxi_" + product.id);
-      
-      // 3. Через 100 миллисекунд мягко закрываем Mini App
       setTimeout(() => { 
         tg.close(); 
       }, 100);
-      
     } else {
-      // Это сработает ТОЛЬКО в браузере на ПК
-      alert("Тест на ПК: переход к боту с id " + product.id);
+      // Железный фолбек для ПК и браузеров: вместо алерта просто открываем ссылку напрямую
+      window.open(botUrl, '_blank');
     }
   };
 
