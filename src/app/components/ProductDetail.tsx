@@ -13,7 +13,7 @@ interface Product {
   channel_username: string;
   telegram_post_id: string | number;
   created_at: string; 
-  description: string; // Исправили ошибку: вернули поле описания в интерфейс
+  description: string;
 }
 
 interface ProductDetailProps {
@@ -24,21 +24,13 @@ interface ProductDetailProps {
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
   const [isSent, setIsSent] = useState(false);
 
-  // Сбрасываем статус кнопки такси при смене товара
   useEffect(() => {
     setIsSent(false);
   }, [product?.id]);
 
-  // Выводим данные в консоль (F12), чтобы проверить, что присылает бэкенд
-  useEffect(() => {
-    if (product) {
-      console.log("Данные текущего товара (product):", product);
-    }
-  }, [product]);
-
   if (!product) return null;
 
-  // 1. КНОПКА ТАКСИ
+  // 1. КНОПКА ТАКСИ (С обновленной пробивной вибрацией Heavy Impact)
   const handleCalculateTaxi = () => {
     if (isSent) return;
 
@@ -46,8 +38,14 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg) {
-      if (tg.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
+      // Сигнализируем Телеграму, что мы активны
+      if (tg.ready) tg.ready();
+
+      // МЕНЯЕМ НА ИМПАКТ (Этот тип вибрации работает гораздо стабильнее на смартфонах)
+      if (tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+        tg.HapticFeedback.impactOccurred('heavy'); 
+      } else if (navigator.vibrate) {
+        navigator.vibrate(100); // Запасной вибро-тук браузера
       }
       
       if (tg.showPopup) {
@@ -64,19 +62,21 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
       setIsSent(true);
     } else {
+      if (navigator.vibrate) navigator.vibrate(100);
       window.open(botUrl, '_blank');
       setIsSent(true);
     }
   };
 
-  // 2. СВЯЗАТЬСЯ С ПРОДАВЦОМ (С динамической сборкой URL и очисткой)
+  // 2. ИСПРАВЛЕННАЯ КНОПКА: Связаться с продавцом (Без лишних @)
   const handleContactSeller = () => {
     const tg = (window as any).Telegram?.WebApp;
     
     if (product.seller && product.seller !== 'Админ канала' && product.seller !== 'Не указан') {
+      // Полностью очищаем строку от @ и пробелов, чтобы остался ТОЛЬКО чистый ник
       const cleanUsername = product.seller.replace('@', '').trim();
-      const sellerUrl = `https://t.me/${cleanUsername}`;
-      
+      const sellerUrl = `https://t.me/${cleanUsername}`; // Идеальный формат: https://t.me/username
+
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(sellerUrl);
       } else {
@@ -94,7 +94,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // 3. ОТКРЫТЬ В КАНАЛЕ (Динамическая склейка ссылки на пост)
+  // 3. ОТКРЫТЬ В КАНАЛЕ (Тоже убираем возможные @ из названия канала)
   const handleOpenInChannel = () => {
     const tg = (window as any).Telegram?.WebApp;
     
@@ -116,7 +116,6 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // Красивое форматирование даты
   const formatPostDate = (dateString: string) => {
     try {
       if (!dateString) return "Не указана";
@@ -130,11 +129,10 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // Проверка: есть ли у нас живой продавец
   const hasValidSeller = product.seller && 
-                             product.seller !== 'Админ канала' && 
-                             product.seller !== 'Не указан' && 
-                             product.seller.trim() !== '';
+                         product.seller !== 'Админ канала' && 
+                         product.seller !== 'Не указан' && 
+                         product.seller.trim() !== '';
 
   return (
     <motion.div
@@ -217,7 +215,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 </span>
               </div>
 
-              {/* ДИНАМИЧЕСКИЙ ПРОДАВЕЦ */}
+              {/* ТЕКСТОВОЕ ОТОБРАЖЕНИЕ ПРОДАВЦА (Для красоты тут собачку оставим) */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Продавец</span>
                 <span className="text-sm font-medium text-gray-900">
@@ -250,7 +248,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 </span>
               </div>
 
-              {/* ДАТА ПУБЛИКАЦИИ */}
+              {/* ДАТА */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Дата публикации</span>
                 <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
