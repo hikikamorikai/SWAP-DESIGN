@@ -22,11 +22,11 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
   const handleCalculateTaxi = () => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
-      // Отправляем специальный код и ID товара, который бот поймает на ThinkPad
-      tg.sendData("calc_taxi:" + product.id);
+      // Новая логика бэкендщика через диплинк бота
+      tg.openTelegramLink(`https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`);
     } else {
-      // Если тестируешь в обычном браузере на компе:
-      alert("Локальный тест: отправка боту calc_taxi:" + product.id);
+      // Оставляем для тестов в браузере на компьютере
+      alert("Локальный тест: переход по ссылке к боту с id " + product.id);
     }
   };
   if (!product) return null;

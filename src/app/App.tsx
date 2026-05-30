@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { ProductCard } from "./components/ProductCard";
+// 1. ИМПОРТ: Добавляем импорт ProductCardSkeleton рядом с ProductCard
+import { ProductCard, ProductCardSkeleton } from "./components/ProductCard";
 import { ProductDetail } from "./components/ProductDetail";
 import { CategoryFilter } from "./components/CategoryFilter";
 import { supabase } from "./supabaseClient";
@@ -71,11 +72,11 @@ export default function App() {
   useEffect(() => {
     fetchProducts(true);
     const tg = (window as any).Telegram?.WebApp;
-  if (tg) {
-    tg.ready();                  // Сообщаем ТГ, что мини-апп загрузился
-    tg.setHeaderColor('bg_color'); // Красим верхнюю панельку телефона под цвет темы
-    tg.expand();                 // Разворачиваем приложение на максимум вверх
-  }
+    if (tg) {
+      tg.ready();                  // Сообщаем ТГ, что мини-апп загрузился
+      tg.setHeaderColor('bg_color'); // Красим верхнюю панельку телефона под цвет темы
+      tg.expand();                 // Разворачиваем приложение на максимум вверх
+    }
   }, []);
 
   const handleRefresh = async () => {
@@ -101,26 +102,25 @@ export default function App() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         
-   {/* Шапка приложения без названия */}
-<div className="flex justify-end mb-6 pt-2">
-  {/* Кнопочка аккуратно прижата к правому краю, а лишние отступы убраны */}
-  <button 
-    onClick={handleRefresh}
-    disabled={isRefreshing || loading}
-    className={`p-1.5 text-gray-300 hover:text-gray-500 transition-colors rounded-md ${isRefreshing ? 'opacity-40' : ''}`}
-  >
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      strokeWidth={2} 
-      stroke="currentColor" 
-      className="w-4 h-4"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-    </svg>
-  </button>
-</div>
+        {/* Шапка приложения без названия */}
+        <div className="flex justify-end mb-6 pt-2">
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing || loading}
+            className={`p-1.5 text-gray-300 hover:text-gray-500 transition-colors rounded-md ${isRefreshing ? 'opacity-40' : ''}`}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              strokeWidth={2} 
+              stroke="currentColor" 
+              className="w-4 h-4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+          </button>
+        </div>
 
         <div className="mb-8">
           <CategoryFilter
@@ -130,8 +130,13 @@ export default function App() {
           />
         </div>
 
+        {/* 2. ЗАМЕНА ЛОГИКИ ЗАГРУЗКИ: рендерим красивую сетку из 6 скелетонов */}
         {loading ? (
-          <div className="text-center py-16 text-gray-500">Загрузка товаров...</div>
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {filteredProducts.map((product) => (
