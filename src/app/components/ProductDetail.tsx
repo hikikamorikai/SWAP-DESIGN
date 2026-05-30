@@ -116,29 +116,20 @@
     // 3. ОТКРЫТЬ В КАНАЛЕ
     const handleOpenInChannel = () => {
       const tg = (window as any).Telegram?.WebApp;
-
-      // ДОБАВЛЯЕМ АЛЕРТ ДЛЯ ДИАГНОСТИКИ:
-  alert(`DEBUG:
-  Channel: ${product.channel_username}
-  PostID: ${product.telegram_post_id}
-  Type of PostID: ${typeof product.telegram_post_id}
-`);
-      
-      if (product.channel_username && product.telegram_post_id) {
-        const cleanChannel = product.channel_username.replace('@', '').trim();
-        const channelUrl = `https://t.me/${cleanChannel}/${product.telegram_post_id}`;
-        
+    
+      // Очищаем имя от лишних символов
+      const channel = product.channel_username?.replace('@', '').trim();
+      const postId = product.telegram_post_id;
+    
+      if (channel && postId) {
+        const channelUrl = `https://t.me/${channel}/${postId}`;
         if (tg && tg.openLink) {
-          tg.openLink(channelUrl); 
+          tg.openLink(channelUrl);
         } else {
           window.open(channelUrl, '_blank');
         }
       } else {
-        if (tg && tg.showPopup) {
-          tg.showPopup({ message: 'Ссылка на оригинальный пост недоступна.' });
-        } else {
-          alert('Ссылка на оригинальный пост недоступна.');
-        }
+        alert(`Ошибка: Данные не найдены (Канал: ${channel}, ID: ${postId})`);
       }
     };
 

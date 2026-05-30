@@ -16,6 +16,8 @@ interface SupabaseProduct {
   is_active: boolean;
   category?: string;
   channel_username: string;
+  telegram_post_id: number;
+  created_at: string;
 }
 
 const categories = ["Все", "Одежда", "Электроника", "Для дома", "Аксессуары"];
@@ -56,7 +58,8 @@ export default function App() {
           image: item.photo_url,
           seller: item.seller || "",
           seller_district: item.seller_district,
-          channel: item.channel_username || "",
+          channel_username: item.channel_username,
+          telegram_post_id: item.telegram_post_id,
           category: item.category || "Одежда",
           description: item.description,
           size: item.size
