@@ -30,7 +30,27 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
   if (!product) return null;
 
-  // 1. КНОПКА ТАКСИ (С обновленной пробивной вибрацией Heavy Impact)
+  // Функция валидации продавца (вынесли вверх, чтобы использовать и в кнопках, и в верстке)
+  const getValidSellerUsername = () => {
+    const rawSeller = product.seller || "";
+    // Убираем собачки и пробелы
+    const cleanUsername = rawSeller.replace(/[@\s]/g, ''); 
+    
+    // Проверяем, чтобы это не был мусор из базы
+    const isInvalid = ["Админ", "Ташкент", "Не указан", "Канал"].some(word => 
+      rawSeller.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (cleanUsername && !isInvalid && cleanUsername.trim() !== "") {
+      return cleanUsername;
+    }
+    return null;
+  };
+
+  const sellerUsername = getValidSellerUsername();
+  const hasValidSeller = sellerUsername !== null;
+
+  // 1. КНОПКА ТАКСИ
   const handleCalculateTaxi = () => {
     if (isSent) return;
 
@@ -38,14 +58,12 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg) {
-      // Сигнализируем Телеграму, что мы активны
       if (tg.ready) tg.ready();
 
-      // МЕНЯЕМ НА ИМПАКТ (Этот тип вибрации работает гораздо стабильнее на смартфонах)
       if (tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
         tg.HapticFeedback.impactOccurred('heavy'); 
       } else if (navigator.vibrate) {
-        navigator.vibrate(100); // Запасной вибро-тук браузера
+        navigator.vibrate(100);
       }
       
       if (tg.showPopup) {
@@ -68,14 +86,12 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // 2. ИСПРАВЛЕННАЯ КНОПКА: Связаться с продавцом (Без лишних @)
+  // 2. ИСПРАВЛЕННАЯ ФУНКЦИЯ СВЯЗИ (По промпту бэкендщика 🚀)
   const handleContactSeller = () => {
     const tg = (window as any).Telegram?.WebApp;
     
-    if (product.seller && product.seller !== 'Админ канала' && product.seller !== 'Не указан') {
-      // Полностью очищаем строку от @ и пробелов, чтобы остался ТОЛЬКО чистый ник
-      const cleanUsername = product.seller.replace('@', '').trim();
-      const sellerUrl = `https://t.me/${cleanUsername}`; // Идеальный формат: https://t.me/username
+    if (hasValidSeller && sellerUsername) {
+      const sellerUrl = `https://t.me/${sellerUsername}`;
 
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(sellerUrl);
@@ -94,7 +110,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
     }
   };
 
-  // 3. ОТКРЫТЬ В КАНАЛЕ (Тоже убираем возможные @ из названия канала)
+  // 3. ОТКРЫТЬ В КАНАЛЕ
   const handleOpenInChannel = () => {
     const tg = (window as any).Telegram?.WebApp;
     
@@ -128,11 +144,6 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
       return "Не указана";
     }
   };
-
-  const hasValidSeller = product.seller && 
-                         product.seller !== 'Админ канала' && 
-                         product.seller !== 'Не указан' && 
-                         product.seller.trim() !== '';
 
   return (
     <motion.div
@@ -215,7 +226,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                 </span>
               </div>
 
-              {/* ТЕКСТОВОЕ ОТОБРАЖЕНИЕ ПРОДАВЦА (Для красоты тут собачку оставим) */}
+              {/* ИСПРАВЛЕННЫЙ РЕНДЕР ПРОДАВЦА */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Продавец</span>
                 <span className="text-sm font-medium text-gray-900">
@@ -225,7 +236,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                       className="text-blue-600 hover:underline flex items-center gap-1 bg-blue-5 px-2.5 py-1 rounded-lg text-xs font-medium"
                     >
                       <User className="w-3.5 h-3.5" />
-                      {product.seller.startsWith('@') ? product.seller : `@${product.seller}`}
+                      @{sellerUsername}
                     </button>
                   ) : (
                     "Не указан"
