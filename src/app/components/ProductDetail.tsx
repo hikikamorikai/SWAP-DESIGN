@@ -19,22 +19,29 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
-  // Заменяем функцию в файле ProductDetail.tsx
-const handleCalculateTaxi = () => {
-  const tg = (window as any).Telegram?.WebApp;
-  
-  if (tg) {
-    // 1. Сначала жестко закрываем Mini App, чтобы десктоп-версия не тупила
-    tg.close();
-    
-    // 2. И сразу перенаправляем в чат к боту с нужной командой
-    tg.openTelegramLink("https://t.me/nearbytashkent_bot?start=calc_taxi_" + product.id);
-  } else {
-    // Для тестов на компьютере вне Телеграма
-    alert("Локальный тест: закрытие и переход к боту с id " + product.id);
-  }
-};
+
   if (!product) return null;
+  // Заменяем функцию в файле ProductDetail.tsx
+  const handleCalculateTaxi = () => {
+    const tg = (window as any).Telegram?.WebApp;
+    
+    if (tg) {
+      // 1. Сразу даем вибро-отклик в палец
+      tg.HapticFeedback.impactOccurred('medium');
+      
+      // 2. Сначала открываем ссылку к боту (теперь Телеграм её точно подхватит)
+      tg.openTelegramLink("https://t.me/nearbytashkent_bot?start=calc_taxi_" + product.id);
+      
+      // 3. Через 100 миллисекунд мягко закрываем Mini App
+      setTimeout(() => { 
+        tg.close(); 
+      }, 100);
+      
+    } else {
+      // Это сработает ТОЛЬКО в браузере на ПК
+      alert("Тест на ПК: переход к боту с id " + product.id);
+    }
+  };
 
   return (
     <motion.div
