@@ -8,7 +8,7 @@ interface SupabaseProduct {
   id: number;
   description: string;
   price_uzs: number;
-  photo_url: string;
+  photo_url: string[];
   size: string;
   seller_district: string;
   is_active: boolean;
@@ -70,6 +70,12 @@ export default function App() {
 
   useEffect(() => {
     fetchProducts(true);
+    const tg = (window as any).Telegram?.WebApp;
+  if (tg) {
+    tg.ready();                  // Сообщаем ТГ, что мини-апп загрузился
+    tg.setHeaderColor('bg_color'); // Красим верхнюю панельку телефона под цвет темы
+    tg.expand();                 // Разворачиваем приложение на максимум вверх
+  }
   }, []);
 
   const handleRefresh = async () => {

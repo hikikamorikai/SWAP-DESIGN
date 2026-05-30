@@ -5,7 +5,7 @@ interface Product {
   id: number;
   title: string;
   price: string;
-  image: string;
+  image: string[];
   seller: string;
   channel: string;
   description: string;
@@ -19,6 +19,16 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
+  const handleCalculateTaxi = () => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg) {
+      // Отправляем специальный код и ID товара, который бот поймает на ThinkPad
+      tg.sendData("calc_taxi:" + product.id);
+    } else {
+      // Если тестируешь в обычном браузере на компе:
+      alert("Локальный тест: отправка боту calc_taxi:" + product.id);
+    }
+  };
   if (!product) return null;
 
   return (
@@ -37,6 +47,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
         className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Шапка модалки с кнопкой закрытия */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-lg z-10 px-6 py-4 flex justify-between items-center border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">Детали товара</h2>
           <button
@@ -47,15 +58,35 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
           </button>
         </div>
 
+        {/* Главный контейнер с контентом */}
         <div className="p-6">
-          <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-6">
-            <img
-              src={product.image}
-              alt={product.title}
-              className="size-full object-cover"
-            />
+          
+          {/* ГАЛЕРЕЯ КАРТИНОК С ФУНКЦИЕЙ СВАЙПА */}
+          <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-6 relative">
+            <div 
+              className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
+              style={{ scrollbarWidth: 'none' }}
+            >
+              {product.image && product.image.length > 0 ? (
+                product.image.map((imgUrl, index) => (
+                  <div key={index} className="w-full h-full flex-shrink-0 snap-start select-none">
+                    <img
+                      src={imgUrl}
+                      alt={`${product.title} - фото ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      draggable="false"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                  Нет фото
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Информационный блок */}
           <div className="space-y-4">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -72,6 +103,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
               </p>
             </div>
 
+            {/* Характеристики */}
             <div className="pt-4 border-t border-gray-100 space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-500">Категория</span>
@@ -99,18 +131,32 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
               </div>
             </div>
 
+            {/* Кнопки действий */}
             <div className="pt-6 space-y-3">
+              {/* Кнопка такси */}
+              <button 
+                onClick={handleCalculateTaxi}
+                className="w-full bg-yellow-400 text-gray-950 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-yellow-500 transition-colors shadow-sm"
+              >
+                <span>🚕</span>
+                Рассчитать доставку такси
+              </button>
+
+              {/* Кнопка связаться */}
               <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
                 <MessageCircle className="w-5 h-5" />
                 Связаться с продавцом
               </button>
+              
+              {/* Кнопка открыть в канале */}
               <button className="w-full bg-gray-100 text-gray-900 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
                 <ExternalLink className="w-5 h-5" />
                 Открыть в канале
               </button>
             </div>
-          </div>
-        </div>
+
+          </div> {/* Конец div.space-y-4 */}
+        </div> {/* Конец div.p-6 */}
       </motion.div>
     </motion.div>
   );
