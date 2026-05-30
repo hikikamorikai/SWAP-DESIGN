@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "motion/react";
 import { X, MessageCircle, ExternalLink } from "lucide-react";
 
@@ -19,20 +20,23 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, onClose }: ProductDetailProps) {
+  // Стейт, который меняет текст кнопки после отправки
+  const [isSent, setIsSent] = useState(false);
 
   if (!product) return null;
 
   const handleCalculateTaxi = () => {
+    // Если уже отправили, повторно ничего не делаем
+    if (isSent) return;
+
     const tg = (window as any).Telegram?.WebApp;
     const botUrl = `https://t.me/nearbytashkent_bot?start=calc_taxi_${product.id}`;
     
     if (tg) {
-      // 1. Приятный вибро-отклик в палец
       if (tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('medium');
       }
       
-      // 2. СНАЧАЛА вызываем нативное уведомление (Popup), которое просит бэкендер
       if (tg.showPopup) {
         tg.showPopup({
           title: '🚕 Расчет отправлен!',
@@ -41,17 +45,16 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
         });
       }
       
-      // 3. Открываем диплинк для бэкенда (ТГ отправит команду боту)
       if (tg.openTelegramLink) {
         tg.openTelegramLink(botUrl);
       }
 
-      // 4. МЫ УБРАЛИ tg.close()! Теперь приложение не закроется само.
-      // Юзер увидит красивое окно Телеграма, нажмет «Понятно» и сам закроет крестиком Mini App.
+      // Меняем статус кнопки на "Отправлено"
+      setIsSent(true);
 
     } else {
-      // Железный фолбек для обычных браузеров на ПК
       window.open(botUrl, '_blank');
+      setIsSent(true);
     }
   };
 
@@ -71,7 +74,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
         className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Шапка модалки с кнопкой закрытия */}
+        {/* Шапка модалки */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-lg z-10 px-6 py-4 flex justify-between items-center border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">Детали товара</h2>
           <button
@@ -82,10 +85,10 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
           </button>
         </div>
 
-        {/* Главный контейнер с контентом */}
+        {/* Главный контейнер */}
         <div className="p-6">
           
-          {/* ГАЛЕРЕЯ КАРТИНОК С ФУНКЦИЕЙ СВАЙПА */}
+          {/* ГАЛЕРЕЯ КАРТИНОК */}
           <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-6 relative">
             <div 
               className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
@@ -157,13 +160,27 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
             {/* Кнопки действий */}
             <div className="pt-6 space-y-3">
-              {/* Кнопка такси */}
+              {/* УМНАЯ КНОПКА ТАКСИ */}
               <button 
                 onClick={handleCalculateTaxi}
-                className="w-full bg-yellow-400 text-gray-950 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-yellow-500 transition-colors shadow-sm"
+                disabled={isSent} // Блокируем кнопку после отправки
+                className={`w-full py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-sm ${
+                  isSent 
+                    ? "bg-green-100 text-green-800 border border-green-200 cursor-not-allowed" 
+                    : "bg-yellow-400 text-gray-950 hover:bg-yellow-500"
+                }`}
               >
-                <span>🚕</span>
-                Рассчитать доставку такси
+                {isSent ? (
+                  <>
+                    <span>✅</span>
+                    Информация отправлена в чат
+                  </>
+                ) : (
+                  <>
+                    <span>🚕</span>
+                    Рассчитать доставку такси
+                  </>
+                )}
               </button>
 
               {/* Кнопка связаться */}
