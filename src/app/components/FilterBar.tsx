@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export function FilterBar({ onApply, activeFilters }: any) {
   const [category, setCategory] = useState(activeFilters.category);
-  const [priceFrom, setPriceFrom] = useState("");
-  const [priceTo, setPriceTo] = useState("");
+  const [priceFrom, setPriceFrom] = useState(activeFilters.priceFrom);
+  const [priceTo, setPriceTo] = useState(activeFilters.priceTo);
   const [size, setSize] = useState(activeFilters.size);
 
+  // Синхронизация при сбросе через handleRefresh
   useEffect(() => {
     setCategory(activeFilters.category);
     setPriceFrom(activeFilters.priceFrom);
@@ -13,17 +14,18 @@ export function FilterBar({ onApply, activeFilters }: any) {
     setSize(activeFilters.size);
   }, [activeFilters]);
 
-  // Массивы размеров
-  const clothingSizes = ["o/s", "XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-  const shoeSizes = ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"];
+  // Используем useMemo, чтобы размеры обновлялись гарантированно при смене категории
+  const currentSizes = useMemo(() => {
+    const clothing = ["o/s", "XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+    const shoes = ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"];
+    
+    // ВАЖНО: убедись, что строка в кавычках совпадает с тем, что в value у select
+    return category === "Обувь" ? shoes : clothing;
+  }, [category]);
 
-  // Выбираем список размеров в зависимости от категории
-  const currentSizes = category === "Обувь" ? shoeSizes : clothingSizes;
-
-  // Обработчик смены категории
   const handleCategoryChange = (val: string) => {
     setCategory(val);
-    setSize("Все"); // Сбрасываем размер при смене категории
+    setSize("Все"); // Принудительный сброс при смене категории
   };
 
   return (
@@ -55,21 +57,9 @@ export function FilterBar({ onApply, activeFilters }: any) {
           ))}
         </select>
 
-        {/* Цены */}
-        <input 
-          type="number" 
-          placeholder="От (UZS)" 
-          value={priceFrom}
-          onChange={(e) => setPriceFrom(e.target.value)} 
-          className="p-2 bg-gray-50 border rounded-lg text-sm" 
-        />
-        <input 
-          type="number" 
-          placeholder="До (UZS)" 
-          value={priceTo}
-          onChange={(e) => setPriceTo(e.target.value)} 
-          className="p-2 bg-gray-50 border rounded-lg text-sm" 
-        />
+        {/* Поля цены... */}
+        <input type="number" placeholder="От (UZS)" value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
+        <input type="number" placeholder="До (UZS)" value={priceTo} onChange={(e) => setPriceTo(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
       </div>
       
       <button 
