@@ -85,8 +85,17 @@ export default function App() {
   }, []);
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchProducts(false);
+    setIsRefreshing(true); 
+    
+    // Добавляем сброс фильтров, чтобы пользователь сразу видел все новые товары
+    setActiveFilters({ 
+      category: "Все", 
+      priceFrom: "", 
+      priceTo: "", 
+      size: "Все" 
+    });
+    
+    await fetchProducts(false); 
   };
 
   // Логика фильтрации (работает на базе activeFilters)

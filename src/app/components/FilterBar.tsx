@@ -21,6 +21,7 @@ export function FilterBar({ onApply }: any) {
         {/* Размеры (XS, S, M, L, XL, XXL) */}
         <select onChange={(e) => setSize(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm">
           <option value="Все">Размер</option>
+          <option value="o/s">o/s</option>
           <option value="XXS">XXS</option>
           <option value="XS">XS</option>
           <option value="S">S</option>
