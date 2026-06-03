@@ -135,8 +135,7 @@ export default function App() {
 
         <FilterBar 
   onApply={(filters: any) => setActiveFilters(filters)} 
-  // Если ты хочешь, чтобы App тоже знал текущую категорию:
-  currentCategory={activeFilters.category} 
+  activeFilters={activeFilters} // Передаем все текущие фильтры
 />
 
         {loading ? (

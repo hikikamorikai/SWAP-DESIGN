@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export function FilterBar({ onApply, currentCategory }: any) {
-  const [category, setCategory] = useState("Все");
+export function FilterBar({ onApply, activeFilters }: any) {
+  const [category, setCategory] = useState(activeFilters.category);
   const [priceFrom, setPriceFrom] = useState("");
   const [priceTo, setPriceTo] = useState("");
-  const [size, setSize] = useState("Все");
+  const [size, setSize] = useState(activeFilters.size);
+
+  useEffect(() => {
+    setCategory(activeFilters.category);
+    setPriceFrom(activeFilters.priceFrom);
+    setPriceTo(activeFilters.priceTo);
+    setSize(activeFilters.size);
+  }, [activeFilters]);
 
   // Массивы размеров
   const clothingSizes = ["o/s", "XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
