@@ -1,40 +1,68 @@
 import { useState } from "react";
 
-export function FilterBar({ onApply }: any) {
+export function FilterBar({ onApply, currentCategory }: any) {
   const [category, setCategory] = useState("Все");
   const [priceFrom, setPriceFrom] = useState("");
   const [priceTo, setPriceTo] = useState("");
   const [size, setSize] = useState("Все");
 
+  // Массивы размеров
+  const clothingSizes = ["o/s", "XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+  const shoeSizes = ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"];
+
+  // Выбираем список размеров в зависимости от категории
+  const currentSizes = category === "Обувь" ? shoeSizes : clothingSizes;
+
+  // Обработчик смены категории
+  const handleCategoryChange = (val: string) => {
+    setCategory(val);
+    setSize("Все"); // Сбрасываем размер при смене категории
+  };
+
   return (
     <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 space-y-3">
       <h3 className="text-sm font-semibold text-gray-700">Фильтры</h3>
       <div className="grid grid-cols-2 gap-2">
+        
         {/* Категории */}
-        <select onChange={(e) => setCategory(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm">
+        <select 
+          value={category}
+          onChange={(e) => handleCategoryChange(e.target.value)} 
+          className="p-2 bg-gray-50 border rounded-lg text-sm"
+        >
           <option value="Все">Все категории</option>
           <option value="Одежда">Одежда</option>
           <option value="Обувь">Обувь</option>
           <option value="Аксессуары">Аксессуары</option>
         </select>
 
-        {/* Размеры (XS, S, M, L, XL, XXL) */}
-        <select onChange={(e) => setSize(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm">
+        {/* Динамические размеры */}
+        <select 
+          value={size} 
+          onChange={(e) => setSize(e.target.value)} 
+          className="p-2 bg-gray-50 border rounded-lg text-sm"
+        >
           <option value="Все">Размер</option>
-          <option value="o/s">o/s</option>
-          <option value="XXS">XXS</option>
-          <option value="XS">XS</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="XXL">XXL</option>
-          <option value="XXXL">XXXL</option>
+          {currentSizes.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
         </select>
 
         {/* Цены */}
-        <input type="number" placeholder="От (UZS)" onChange={(e) => setPriceFrom(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
-        <input type="number" placeholder="До (UZS)" onChange={(e) => setPriceTo(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
+        <input 
+          type="number" 
+          placeholder="От (UZS)" 
+          value={priceFrom}
+          onChange={(e) => setPriceFrom(e.target.value)} 
+          className="p-2 bg-gray-50 border rounded-lg text-sm" 
+        />
+        <input 
+          type="number" 
+          placeholder="До (UZS)" 
+          value={priceTo}
+          onChange={(e) => setPriceTo(e.target.value)} 
+          className="p-2 bg-gray-50 border rounded-lg text-sm" 
+        />
       </div>
       
       <button 

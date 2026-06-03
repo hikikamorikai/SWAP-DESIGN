@@ -133,7 +133,11 @@ export default function App() {
           </button>
         </header>
 
-        <FilterBar onApply={(filters: any) => setActiveFilters(filters)} />
+        <FilterBar 
+  onApply={(filters: any) => setActiveFilters(filters)} 
+  // Если ты хочешь, чтобы App тоже знал текущую категорию:
+  currentCategory={activeFilters.category} 
+/>
 
         {loading ? (
           <div className="grid grid-cols-3 gap-3">
