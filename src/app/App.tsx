@@ -19,59 +19,39 @@ interface SupabaseProduct {
   created_at: string;
 }
 
-const formatPrice = (price: number) => {
-  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-};
+const formatPrice = (price: number) => price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
 export default function App() {
-  const [activeFilters, setActiveFilters] = useState({ 
-    category: "Все", priceFrom: "", priceTo: "", size: "Все" 
-  });
-  
+  const [activeFilters, setActiveFilters] = useState({ category: "Все", priceFrom: "", priceTo: "", size: "Все" });
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'favorites'>('all');
+  // Добавленное состояние для уведомлений
+  const [toast, setToast] = useState<string | null>(null);
 
-  // Функция загрузки данных
+  // Функция для отображения уведомления
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 2000);
+  };
+
   const fetchProducts = async (showGlobalLoading = true) => {
     try {
       if (showGlobalLoading) setLoading(true);
-      
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("id", { ascending: false });
-
-      if (error) {
-        console.error("Ошибка Supabase:", error.message);
-        return;
-      }
-
+      const { data } = await supabase.from("products").select("*").eq("is_active", true).order("id", { ascending: false });
       if (data) {
-        const adaptedProducts = data.map((item: SupabaseProduct) => ({
-          id: item.id,
-          title: item.description,
-          price: `${formatPrice(item.price_uzs)} UZS`,
-          price_uzs: item.price_uzs, 
-          image: item.photo_url,
-          seller: item.seller || "Админ",
-          seller_district: item.seller_district || "Ташкент",
-          channel_username: item.channel_username,
-          telegram_post_id: item.telegram_post_id,
-          category: item.category || "Другое",
-          description: item.description,
+        const adapted = data.map((item: SupabaseProduct) => ({
+          id: item.id, title: item.description, price: `${formatPrice(item.price_uzs)} UZS`,
+          price_uzs: item.price_uzs, image: item.photo_url, seller: item.seller || "Админ",
+          seller_district: item.seller_district || "Ташкент", category: item.category || "Другое",
           size: item.size || "M"
         }));
-        setProducts(adaptedProducts);
+        setProducts(adapted);
       }
-    } catch (err) {
-      console.error("Не удалось загрузить товары:", err);
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
+    } finally { setLoading(false); setIsRefreshing(false); }
   };
 
   useEffect(() => {
@@ -79,85 +59,105 @@ export default function App() {
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
       tg.ready();
-      tg.setHeaderColor('bg_color');
-      tg.expand();
+      const userId = tg.initDataUnsafe.user?.id?.toString();
+      if (userId) {
+        supabase.from('favorites').select('product_id').eq('user_id', userId)
+          .then(({ data }) => data && setFavorites(data.map(i => i.product_id)));
+      }
     }
   }, []);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true); 
+  const toggleFavorite = async (productId: number) => {
+    const userId = (window as any).Telegram?.WebApp.initDataUnsafe.user?.id?.toString();
+    if (!userId) return;
+    const isFavorited = favorites.includes(productId);
     
-    // Добавляем сброс фильтров, чтобы пользователь сразу видел все новые товары
-    setActiveFilters({ 
-      category: "Все", 
-      priceFrom: "", 
-      priceTo: "", 
-      size: "Все" 
-    });
-    
-    await fetchProducts(false); 
+    if (isFavorited) {
+      setFavorites(prev => prev.filter(id => id !== productId));
+      await supabase.from('favorites').delete().match({ user_id: userId, product_id: productId });
+      showToast("Удалено из избранного");
+    } else {
+      setFavorites(prev => [...prev, productId]);
+      await supabase.from('favorites').insert({ user_id: userId, product_id: productId });
+      showToast("Добавлено в избранное");
+    }
   };
 
-  // Логика фильтрации (работает на базе activeFilters)
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+  const displayProducts = useMemo(() => {
+    let filtered = products.filter((p) => {
       const matchesCategory = activeFilters.category === "Все" || p.category === activeFilters.category;
       const matchesSize = activeFilters.size === "Все" || p.size === activeFilters.size;
       const price = Number(p.price_uzs) || 0;
-      const matchesPrice = 
-        (!activeFilters.priceFrom || price >= Number(activeFilters.priceFrom)) &&
-        (!activeFilters.priceTo || price <= Number(activeFilters.priceTo));
-      
-      return matchesCategory && matchesSize && matchesPrice;
+      return matchesCategory && matchesSize && 
+             (!activeFilters.priceFrom || price >= Number(activeFilters.priceFrom)) &&
+             (!activeFilters.priceTo || price <= Number(activeFilters.priceTo));
     });
-  }, [products, activeFilters]);
+
+    if (activeTab === 'favorites') {
+      filtered = filtered.filter(p => favorites.includes(p.id));
+    }
+    return filtered;
+  }, [products, activeFilters, activeTab, favorites]);
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
-      {isRefreshing && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-          <div className="bg-gray-900/80 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm animate-pulse shadow-md">
-            Обновление...
+    <div className="min-h-screen bg-gray-50 pb-10">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        
+        <div className="flex gap-2 mb-6">
+          <button 
+            onClick={() => setActiveTab('all')}
+            className={`px-4 py-2 text-sm rounded-full transition-all ${activeTab === 'all' ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            Все товары
+          </button>
+          <button 
+            onClick={() => setActiveTab('favorites')}
+            className={`px-4 py-2 text-sm rounded-full transition-all ${activeTab === 'favorites' ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            ❤️ Избранное
+          </button>
+        </div>
+
+        <FilterBar onApply={setActiveFilters} activeFilters={activeFilters} />
+
+        <div className="grid grid-cols-3 gap-3">
+          {loading ? Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />) : 
+            displayProducts.length > 0 ? (
+              displayProducts.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  isFavorite={favorites.includes(product.id)}
+                  onToggleFavorite={() => toggleFavorite(product.id)}
+                  onClick={() => setSelectedProduct(product)} 
+                />
+              ))
+            ) : (
+              <p className="col-span-3 text-center text-gray-500 py-10">
+                {activeTab === 'favorites' ? "Список избранного пуст" : "Товары не найдены"}
+              </p>
+            )
+          }
+        </div>
+      </div>
+
+      {/* Компонент уведомления */}
+      {toast && (
+        <div className="fixed bottom-20 left-4 right-4 z-50 flex justify-center">
+          <div className="bg-black text-white px-6 py-3 rounded-full text-sm font-medium shadow-xl animate-bounce">
+            {toast}
           </div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <header className="flex items-center justify-between mb-6 pt-2 px-2">
-          <div className="w-8 h-8" />
-          <div className="flex flex-col items-center flex-1 text-center">
-            <h1 className="text-[16px] font-bold text-gray-900 leading-tight">iBuyNasvay</h1>
-          </div>
-          <button onClick={handleRefresh} className="w-8 h-8 flex items-center justify-center text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-          </button>
-        </header>
-
-        <FilterBar 
-  onApply={(filters: any) => setActiveFilters(filters)} 
-  activeFilters={activeFilters} // Передаем все текущие фильтры
-/>
-
-        {loading ? (
-          <div className="grid grid-cols-3 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-3">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} onClick={() => setSelectedProduct(product)} />
-            ))}
-          </div>
-        )}
-
-        {!loading && filteredProducts.length === 0 && (
-          <div className="text-center py-16 text-gray-500">Товары не найдены</div>
-        )}
-      </div>
-
-      {selectedProduct && (
-        <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} />
-      )}
+{selectedProduct && (
+  <ProductDetail 
+    product={selectedProduct} 
+    onClose={() => setSelectedProduct(null)} 
+    isFavorite={favorites.includes(selectedProduct.id)}
+    onToggleFavorite={() => toggleFavorite(selectedProduct.id)}
+  />
+)}
     </div>
   );
 }

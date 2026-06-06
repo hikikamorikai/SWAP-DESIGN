@@ -12,16 +12,30 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   onClick: () => void;
+  // Добавляем эти поля для избранного:
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }
 
-// === 1. ОСНОВНАЯ КАРТОЧКА ТОВАРА ===
-export function ProductCard({ product, onClick }: ProductCardProps) {
+// === ОСНОВНАЯ КАРТОЧКА ТОВАРА ===
+export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: ProductCardProps) {
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative"
     >
+      {/* Кнопка сердечка */}
+      <button 
+        onClick={(e) => { 
+          e.stopPropagation(); // Не дает сработать onClick всей карточки
+          onToggleFavorite(); 
+        }}
+        className="absolute top-2 right-2 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm active:scale-90 transition-transform"
+      >
+        {isFavorite ? "❤️" : "🤍"}
+      </button>
+
       <div className="aspect-square bg-gray-100 overflow-hidden relative">
         {product.image && product.image.length > 0 ? (
           <img
@@ -48,24 +62,16 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
   );
 }
 
-// === 2. СЛУЖЕБНЫЙ КОМПОНЕНТ ДЛЯ ЗАГРУЗКИ (СКЕЛЕТОН) ===
+// === СКЕЛЕТОН ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ ===
 export function ProductCardSkeleton() {
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse">
-      {/* Имитируем квадратную картинку */}
       <div className="aspect-square bg-gray-200" />
-      
-      {/* Имитируем текст */}
       <div className="p-3 space-y-2">
-        {/* Строки названия */}
         <div className="h-3 bg-gray-200 rounded w-5/6" />
         <div className="h-3 bg-gray-200 rounded w-1/2" />
-        
-        {/* Имя канала */}
-        <div className="h-2 bg-gray-200 rounded w-1/3 pt-1" />
-        
-        {/* Цена */}
-        <div className="h-4 bg-gray-200 rounded w-2/3 pt-2" />
+        <div className="h-2 bg-gray-200 rounded w-1/3" />
+        <div className="h-4 bg-gray-200 rounded w-2/3" />
       </div>
     </div>
   );
