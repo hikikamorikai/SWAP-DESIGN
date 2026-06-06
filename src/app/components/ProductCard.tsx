@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { Heart } from "lucide-react"; // Используем иконку для красоты
 
 interface Product {
   id: number;
@@ -12,28 +13,28 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   onClick: () => void;
-  // Добавляем эти поля для избранного:
   isFavorite: boolean;
   onToggleFavorite: () => void;
 }
 
-// === ОСНОВНАЯ КАРТОЧКА ТОВАРА ===
 export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: ProductCardProps) {
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative"
+      className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 relative"
     >
       {/* Кнопка сердечка */}
       <button 
         onClick={(e) => { 
-          e.stopPropagation(); // Не дает сработать onClick всей карточки
+          e.stopPropagation(); // Критически важно!
           onToggleFavorite(); 
         }}
-        className="absolute top-2 right-2 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm active:scale-90 transition-transform"
+        className="absolute top-2 right-2 z-10 p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
       >
-        {isFavorite ? "❤️" : "🤍"}
+        <Heart 
+          className={`w-4 h-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"}`} 
+        />
       </button>
 
       <div className="aspect-square bg-gray-100 overflow-hidden relative">
@@ -41,11 +42,11 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
           <img
             src={product.image[0]} 
             alt={product.title}
-            className="size-full object-cover"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
-          <div className="size-full flex items-center justify-center text-gray-400 text-[10px]">
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-[10px]">
             Нет фото
           </div>
         )}
@@ -62,15 +63,13 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
   );
 }
 
-// === СКЕЛЕТОН ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ ===
 export function ProductCardSkeleton() {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse">
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse border border-gray-100">
       <div className="aspect-square bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-3 bg-gray-200 rounded w-5/6" />
         <div className="h-3 bg-gray-200 rounded w-1/2" />
-        <div className="h-2 bg-gray-200 rounded w-1/3" />
         <div className="h-4 bg-gray-200 rounded w-2/3" />
       </div>
     </div>
