@@ -24,8 +24,8 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
   const formatPrice = (val: number, cur: string) => {
     const formatted = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     switch (cur) {
-      case 'USD': return `$${val}`;
-      case 'EUR': return `${val}€`;
+      case 'USD': return `$${formatted}`;
+      case 'EUR': return `${formatted} €`;
       default: return `${formatted} UZS`;
     }
   };
