@@ -150,7 +150,7 @@ export function ProductDetail({ product, onClose, isFavorite, onToggleFavorite }
 
             <div className="pt-6 space-y-3">
               <button onClick={handleCalculateTaxi} disabled={isSent} className={`w-full py-4 rounded-xl font-medium flex items-center justify-center gap-2 ${isSent ? "bg-green-100 text-green-800" : "bg-yellow-400"}`}>
-                {isSent ? "✅ Информация отправлена" : "🚕 Рассчитать доставку такси"}
+                {isSent ? "✅ Информация отправлена в чат бота" : "🚕 Рассчитать доставку такси"}
               </button>
               {hasValidSeller ? (
                 <button onClick={handleContactSeller} className="w-full bg-blue-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2">
