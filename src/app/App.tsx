@@ -66,8 +66,25 @@ export default function App() {
     }
   };
 
+  // ИСПРАВЛЕННЫЙ USEEFFECT
   useEffect(() => {
-    fetchProducts(true);
+    const initApp = async () => {
+      // Загружаем товары
+      await fetchProducts(true);
+
+      // Загружаем сохраненное избранное из базы данных
+      const userId = (window as any).Telegram?.WebApp.initDataUnsafe.user?.id?.toString() || "123456789";
+      const { data } = await supabase
+        .from('favorites')
+        .select('product_id')
+        .eq('user_id', userId);
+
+      if (data) {
+        setFavorites(data.map(item => item.product_id));
+      }
+    };
+
+    initApp();
   }, []);
 
   const displayProducts = useMemo(() => {
