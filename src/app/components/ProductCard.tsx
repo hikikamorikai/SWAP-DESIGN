@@ -1,10 +1,11 @@
 import { motion } from "motion/react";
-import { Heart } from "lucide-react"; // Используем иконку для красоты
+import { Heart } from "lucide-react";
 
 interface Product {
   id: number;
   title: string;
-  price: string;
+  price_value: number; // Обновили: теперь это число
+  currency: string;    // Обновили: теперь это валюта
   image: string[]; 
   seller: string;
   channel: string;
@@ -18,6 +19,17 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: ProductCardProps) {
+  
+  // Функция для отображения цены
+  const formatPrice = (val: number, cur: string) => {
+    const formatted = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    switch (cur) {
+      case 'USD': return `$${val}`;
+      case 'EUR': return `${val}€`;
+      default: return `${formatted} UZS`;
+    }
+  };
+
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
@@ -27,7 +39,7 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
       {/* Кнопка сердечка */}
       <button 
         onClick={(e) => { 
-          e.stopPropagation(); // Критически важно!
+          e.stopPropagation(); 
           onToggleFavorite(); 
         }}
         className="absolute top-2 right-2 z-10 p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
@@ -57,7 +69,9 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
           {product.title}
         </h3>
         <p className="text-[10px] text-gray-500 mb-1.5">{product.channel}</p>
-        <p className="text-sm font-semibold text-gray-900">{product.price}</p>
+        <p className="text-sm font-semibold text-gray-900">
+          {formatPrice(product.price_value, product.currency)}
+        </p>
       </div>
     </motion.div>
   );

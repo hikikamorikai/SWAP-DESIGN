@@ -8,6 +8,7 @@ interface SupabaseProduct {
   id: number;
   description: string;
   price_uzs: number;
+  currency: string;
   photo_url: string[];
   size: string;
   seller_district: string;
@@ -41,9 +42,15 @@ export default function App() {
       const { data } = await supabase.from("products").select("*").eq("is_active", true).order("id", { ascending: false });
       if (data) {
         const adapted = data.map((item: SupabaseProduct) => ({
-          id: item.id, title: item.description, price: `${formatPrice(item.price_uzs)} UZS`,
-          price_uzs: item.price_uzs, image: item.photo_url, seller: item.seller || "Админ",
-          seller_district: item.seller_district || "Ташкент", category: item.category || "Другое",
+          id: item.id, 
+          title: item.description, 
+          price_value: item.price_uzs, // передаем число
+          currency: item.currency || "UZS", // передаем валюту
+          price_display: `${formatPrice(item.price_uzs)} ${item.currency || "UZS"}`,
+          image: item.photo_url, 
+          seller: item.seller || "Админ",
+          seller_district: item.seller_district || "Ташкент", 
+          category: item.category || "Другое",
           size: item.size || "M"
         }));
         setProducts(adapted);
@@ -66,13 +73,9 @@ export default function App() {
     }
   };
 
-  // ИСПРАВЛЕННЫЙ USEEFFECT
   useEffect(() => {
     const initApp = async () => {
-      // Загружаем товары
       await fetchProducts(true);
-
-      // Загружаем сохраненное избранное из базы данных
       const userId = (window as any).Telegram?.WebApp.initDataUnsafe.user?.id?.toString() || "123456789";
       const { data } = await supabase
         .from('favorites')
@@ -83,7 +86,6 @@ export default function App() {
         setFavorites(data.map(item => item.product_id));
       }
     };
-
     initApp();
   }, []);
 
@@ -91,7 +93,7 @@ export default function App() {
     let filtered = products.filter((p) => {
       const matchesCategory = activeFilters.category === "Все" || p.category === activeFilters.category;
       const matchesSize = activeFilters.size === "Все" || p.size === activeFilters.size;
-      const price = Number(p.price_uzs) || 0;
+      const price = Number(p.price_value) || 0;
       return matchesCategory && matchesSize && 
              (!activeFilters.priceFrom || price >= Number(activeFilters.priceFrom)) &&
              (!activeFilters.priceTo || price <= Number(activeFilters.priceTo));
