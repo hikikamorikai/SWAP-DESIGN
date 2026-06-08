@@ -58,8 +58,8 @@ export function FilterBar({ onApply, activeFilters }: any) {
         </select>
 
         {/* Поля цены... */}
-        <input type="number" placeholder="От (UZS)" value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
-        <input type="number" placeholder="До (UZS)" value={priceTo} onChange={(e) => setPriceTo(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
+        <input type="number" placeholder="От (UZS, USD, EUR)" value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
+        <input type="number" placeholder="До (UZS, USD, EUR)" value={priceTo} onChange={(e) => setPriceTo(e.target.value)} className="p-2 bg-gray-50 border rounded-lg text-sm" />
       </div>
       
       <button 

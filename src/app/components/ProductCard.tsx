@@ -4,9 +4,9 @@ import { Heart } from "lucide-react";
 interface Product {
   id: number;
   title: string;
-  price_value: number; // Обновили: теперь это число
-  currency: string;    // Обновили: теперь это валюта
-  image: string[]; 
+  price_value: number;
+  currency: string;
+  image: string[];
   seller: string;
   channel: string;
 }
@@ -20,14 +20,10 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: ProductCardProps) {
   
-  // Функция для отображения цены
-  const formatPrice = (val: number, cur: string) => {
-    const formatted = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    switch (cur) {
-      case 'USD': return `$${formatted}`;
-      case 'EUR': return `${formatted} €`;
-      default: return `${formatted} UZS`;
-    }
+  // Функция теперь возвращает просто число с пробелами, 
+  // так как валюту мы выводим в отдельном красивом бейдже
+  const formatPrice = (val: number) => {
+    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   };
 
   return (
@@ -49,6 +45,7 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
         />
       </button>
 
+      {/* Фото товара */}
       <div className="aspect-square bg-gray-100 overflow-hidden relative">
         {product.image && product.image.length > 0 ? (
           <img
@@ -65,13 +62,27 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
       </div>
       
       <div className="p-3">
+        {/* Заголовок */}
         <h3 className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">
           {product.title}
         </h3>
-        <p className="text-[10px] text-gray-500 mb-1.5">{product.channel}</p>
-        <p className="text-sm font-semibold text-gray-900">
-          {formatPrice(product.price_value, product.currency)}
-        </p>
+        
+        {/* Канал */}
+        <p className="text-[10px] text-gray-500 mb-2 truncate">@{product.channel}</p>
+        
+        {/* Блок с ценой и валютным бейджем */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-bold text-gray-900 truncate">
+            {formatPrice(product.price_value)}
+          </p>
+          
+          <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider
+            ${product.currency === 'USD' ? 'bg-green-100 text-green-700' : 
+              product.currency === 'EUR' ? 'bg-blue-100 text-blue-700' : 
+              'bg-gray-100 text-gray-600'}`}>
+            {product.currency}
+          </span>
+        </div>
       </div>
     </motion.div>
   );

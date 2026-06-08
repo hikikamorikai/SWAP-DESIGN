@@ -92,7 +92,8 @@ export default function App() {
   const displayProducts = useMemo(() => {
     let filtered = products.filter((p) => {
       const matchesCategory = activeFilters.category === "Все" || p.category === activeFilters.category;
-      const matchesSize = activeFilters.size === "Все" || p.size === activeFilters.size;
+      const matchesSize = activeFilters.size === "Все" || 
+      (p.size && p.size.split(',').includes(activeFilters.size));
       const price = Number(p.price_value) || 0;
       return matchesCategory && matchesSize && 
              (!activeFilters.priceFrom || price >= Number(activeFilters.priceFrom)) &&
