@@ -67,9 +67,6 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
           {product.title}
         </h3>
         
-        {/* Канал */}
-        <p className="text-[10px] text-gray-500 mb-2 truncate">@{product.channel}</p>
-        
         {/* Блок с ценой и валютным бейджем */}
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-bold text-gray-900 truncate">
