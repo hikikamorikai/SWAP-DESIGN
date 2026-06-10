@@ -93,7 +93,7 @@ export default function App() {
     let filtered = products.filter((p) => {
       const matchesCategory = activeFilters.category === "Все" || p.category === activeFilters.category;
       const matchesSize = activeFilters.size === "Все" || 
-      (p.size && p.size.split(',').includes(activeFilters.size));
+      (p.size && p.size.split(',').includes(activeFilters.size.toString()));
       const price = Number(p.price_value) || 0;
       return matchesCategory && matchesSize && 
              (!activeFilters.priceFrom || price >= Number(activeFilters.priceFrom)) &&
