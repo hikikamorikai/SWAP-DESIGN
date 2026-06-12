@@ -85,7 +85,8 @@ export function ProductDetail({ product, onClose, isFavorite, onToggleFavorite }
     if (tg && tg.switchInlineQuery) {
       tg.switchInlineQuery(`share_product_${product.id}`, ['users', 'groups', 'channels']);
     } else {
-      alert("Функция доступна только в Telegram");
+      console.warn("Telegram WebApp API еще не готов");
+    alert("Попробуйте нажать еще раз через секунду, приложение загружается...");
     }
   };
 
