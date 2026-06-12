@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Heart } from "lucide-react";
+import { Heart, Share2 } from "lucide-react";
 
 interface Product {
   id: number;
@@ -20,10 +20,17 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: ProductCardProps) {
   
-  // Функция теперь возвращает просто число с пробелами, 
-  // так как валюту мы выводим в отдельном красивом бейдже
+  // Форматирование цены: только число с пробелами
   const formatPrice = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  };
+
+  // Функция для вызова Telegram Share (switchInlineQuery)
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.switchInlineQuery(`share_product_${product.id}`, ['users', 'groups', 'channels']);
+    }
   };
 
   return (
@@ -32,18 +39,23 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
       onClick={onClick}
       className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 relative"
     >
-      {/* Кнопка сердечка */}
-      <button 
-        onClick={(e) => { 
-          e.stopPropagation(); 
-          onToggleFavorite(); 
-        }}
-        className="absolute top-2 right-2 z-10 p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
-      >
-        <Heart 
-          className={`w-4 h-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"}`} 
-        />
-      </button>
+      {/* Кнопки действий: Поделиться и Избранное */}
+      <div className="absolute top-2 right-2 z-10 flex gap-2">
+        <button 
+          onClick={handleShare}
+          className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
+        >
+          <Share2 className="w-4 h-4 text-gray-600" />
+        </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
+        >
+          <Heart 
+            className={`w-4 h-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"}`} 
+          />
+        </button>
+      </div>
 
       {/* Фото товара */}
       <div className="aspect-square bg-gray-100 overflow-hidden relative">
@@ -63,7 +75,7 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
       
       <div className="p-3">
         {/* Заголовок */}
-        <h3 className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">
+        <h3 className="text-xs font-medium text-gray-900 line-clamp-2 mb-2">
           {product.title}
         </h3>
         
@@ -91,7 +103,6 @@ export function ProductCardSkeleton() {
       <div className="aspect-square bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-3 bg-gray-200 rounded w-5/6" />
-        <div className="h-3 bg-gray-200 rounded w-1/2" />
         <div className="h-4 bg-gray-200 rounded w-2/3" />
       </div>
     </div>
