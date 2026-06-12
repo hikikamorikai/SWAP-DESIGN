@@ -146,7 +146,6 @@ export function ProductDetail({ product, onClose, isFavorite, onToggleFavorite }
                 <span className="text-sm font-medium">{hasValidSeller ? <button onClick={handleContactSeller} className="text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-xs font-medium">@{sellerUsername}</button> : "Не указан"}</span>
               </div>
               <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Район</span><span className="text-sm font-medium flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{product.seller_district || "Не указан"}</span></div>
-              <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Дата</span><span className="text-sm font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{formatPostDate(product.created_at)}</span></div>
             </div>
 
             <div className="pt-6 space-y-3">
