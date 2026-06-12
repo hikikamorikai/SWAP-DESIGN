@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Heart, Share2, Copy } from "lucide-react";
+import { Heart } from "lucide-react";
 
 interface Product {
   id: number;
@@ -25,46 +25,14 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   };
 
-  // Функция для вызова Telegram Share (switchInlineQuery)
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.switchInlineQuery(`share_product_${product.id}`, ['users', 'groups', 'channels']);
-    } else {
-      console.error("WebApp не инициализирован");
-    } 
-  };
-
-  // Функция копирования ссылки
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Замени URL на реальный адрес твоего сайта
-    const link = `https://ваш-сайт.com/product/${product.id}`;
-    navigator.clipboard.writeText(link).then(() => {
-      alert("Ссылка скопирована!");
-    });
-  };
-
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 relative"
     >
-      {/* Кнопки действий: Копировать, Поделиться и Избранное */}
-      <div className="absolute top-2 right-2 z-10 flex gap-2">
-        <button 
-          onClick={handleCopyLink}
-          className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
-        >
-          <Copy className="w-4 h-4 text-gray-600" />
-        </button>
-        <button 
-          onClick={handleShare}
-          className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
-        >
-          <Share2 className="w-4 h-4 text-gray-600" />
-        </button>
+      {/* Кнопка действий сверху: ОСТАЛОСЬ ТОЛЬКО СЕРДЕЧКО */}
+      <div className="absolute top-2 right-2 z-10">
         <button 
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"

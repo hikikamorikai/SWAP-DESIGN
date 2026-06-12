@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { X, MessageCircle, ExternalLink, User, MapPin, Calendar, Heart } from "lucide-react";
+import { X, MessageCircle, Share2, User, MapPin, Calendar, Heart } from "lucide-react";
 
 interface Product {
   id: number;
@@ -79,13 +79,13 @@ export function ProductDetail({ product, onClose, isFavorite, onToggleFavorite }
     }
   };
 
-  const handleOpenInChannel = () => {
+  // ФУНКЦИЯ ДЛЯ КНОПКИ ПОДЕЛИТЬСЯ
+  const handleShare = () => {
     const tg = (window as any).Telegram?.WebApp;
-    const channel = product.channel_username?.replace('@', '').trim();
-    const postId = product.telegram_post_id;
-    if (channel && postId) {
-      const channelUrl = `https://t.me/${channel}/${postId}`;
-      tg?.openLink ? tg.openLink(channelUrl) : window.open(channelUrl, '_blank');
+    if (tg && tg.switchInlineQuery) {
+      tg.switchInlineQuery(`share_product_${product.id}`, ['users', 'groups', 'channels']);
+    } else {
+      alert("Функция доступна только в Telegram");
     }
   };
 
@@ -159,8 +159,10 @@ export function ProductDetail({ product, onClose, isFavorite, onToggleFavorite }
               ) : (
                 <button disabled className="w-full bg-gray-100 text-gray-400 py-4 rounded-xl font-medium">Контакты не указаны</button>
               )}
-              <button onClick={handleOpenInChannel} className="w-full bg-gray-50 text-gray-700 py-4 rounded-xl font-medium flex items-center justify-center gap-2">
-                <ExternalLink className="w-5 h-5" /> Открыть в канале
+              
+              {/* НОВАЯ КНОПКА ПОДЕЛИТЬСЯ */}
+              <button onClick={handleShare} className="w-full bg-gray-50 text-gray-700 py-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors">
+                <Share2 className="w-5 h-5" /> Поделиться
               </button>
             </div>
           </div>
