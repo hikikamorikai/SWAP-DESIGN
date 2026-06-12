@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Heart, Share2 } from "lucide-react";
+import { Heart, Share2, Copy } from "lucide-react";
 
 interface Product {
   id: number;
@@ -30,7 +30,19 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
     e.stopPropagation();
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.switchInlineQuery(`share_product_${product.id}`, ['users', 'groups', 'channels']);
-    }
+    } else {
+      console.error("WebApp не инициализирован");
+    } 
+  };
+
+  // Функция копирования ссылки
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Замени URL на реальный адрес твоего сайта
+    const link = `https://ваш-сайт.com/product/${product.id}`;
+    navigator.clipboard.writeText(link).then(() => {
+      alert("Ссылка скопирована!");
+    });
   };
 
   return (
@@ -39,8 +51,14 @@ export function ProductCard({ product, onClick, isFavorite, onToggleFavorite }: 
       onClick={onClick}
       className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 relative"
     >
-      {/* Кнопки действий: Поделиться и Избранное */}
+      {/* Кнопки действий: Копировать, Поделиться и Избранное */}
       <div className="absolute top-2 right-2 z-10 flex gap-2">
+        <button 
+          onClick={handleCopyLink}
+          className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
+        >
+          <Copy className="w-4 h-4 text-gray-600" />
+        </button>
         <button 
           onClick={handleShare}
           className="p-1.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform"
